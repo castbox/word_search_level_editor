@@ -12,7 +12,7 @@ export PORT=3000
 # 本地数据目录配置（您的实际本地路径）
 export LEVELS_DIR="/Users/yan/Library/Application Support/word_search_level_editor/levels"
 export CONFIGS_DIR="/Users/yan/Library/Application Support/word_search_level_editor/configs"
-export DICTIONARIES_DIR="/Users/yan/Desktop/word_search_level_editor"
+export DICTIONARIES_DIR="/Users/yan/Desktop/word_search_level_editor/data"
 
 # 可选配置
 export MAX_FILE_SIZE="50mb"

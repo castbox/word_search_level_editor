@@ -1,5 +1,10 @@
 #!/bin/bash
 
+# Word Search Level Editor 服务器启动脚本
+# 用途: 启动生产环境服务器，带身份校验
+# 使用: ./scripts/start-server.sh
+# 说明: 适用于服务器部署，会自动安装依赖
+
 echo "🚀 Word Search Level Editor - 启动网页服务器"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 

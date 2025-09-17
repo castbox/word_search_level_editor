@@ -1231,29 +1231,30 @@ class Grid {
   async loadDictionary() {
     console.log('开始加载字典...');
     
-    // 检查electronAPI是否存在和readDictionary方法
-    if (!window.electronAPI) {
-      console.error('loadDictionary: electronAPI 不存在!');
-      this.dictionarySet = new Set();
-      return;
-    }
-    
-    if (typeof window.electronAPI.readDictionary !== 'function') {
-      console.error('loadDictionary: electronAPI.readDictionary 不是函数或不存在!');
+    let dictResult;
+    if (window.electronAPI && typeof window.electronAPI.readDictionary === 'function') {
+      // Electron环境
+      console.log('从electronAPI读取字典...');
+      dictResult = await window.electronAPI.readDictionary();
+    } else if (window.webAPI && typeof window.webAPI.readDictionary === 'function') {
+      // Web环境
+      console.log('从webAPI读取字典...');
+      dictResult = await window.webAPI.readDictionary('dictionary');
+    } else {
+      console.error('loadDictionary: 没有可用的API接口!');
       this.dictionarySet = new Set();
       return;
     }
     
     try {
-      // 从electronAPI获取字典内容
-      console.log('从electronAPI读取字典...');
-      const dictResult = await window.electronAPI.readDictionary();
       
       // 处理不同的返回格式
       let dictContent;
       if (dictResult && typeof dictResult === 'object' && dictResult.success) {
+        // Electron API格式
         dictContent = dictResult.content;
       } else if (typeof dictResult === 'string') {
+        // Web API或直接字符串格式
         dictContent = dictResult;
       } else {
         console.warn('字典读取失败或返回格式不正确:', dictResult);
@@ -1343,15 +1344,19 @@ class Grid {
   // 检测奖励单词（bonus words），逻辑与Python脚本一致
   async detectBonusWords() {
     try {
-      console.log('开始检测bonus words...');
+      console.log('🎯 开始检测bonus words...');
       
       // 1. 获取目标单词列表
       let mainWords = [];
       if (window.wordListInstance && window.wordListInstance.words) {
         mainWords = window.wordListInstance.words.map(w => w.toUpperCase());
-        console.log('主要单词列表:', mainWords, '数量:', mainWords.length);
+        console.log('🎯 主要单词列表:', mainWords, '数量:', mainWords.length);
       } else {
-        console.warn('无法获取单词列表实例或单词列表为空');
+        console.warn('🎯 无法获取单词列表实例或单词列表为空');
+        console.log('🎯 window.wordListInstance:', !!window.wordListInstance);
+        if (window.wordListInstance) {
+          console.log('🎯 window.wordListInstance.words:', window.wordListInstance.words);
+        }
       }
       
       // 检查网格是否有足够的字母
@@ -1371,10 +1376,15 @@ class Grid {
       
       // 如果字典为空，尝试重新加载
       if (dictSet.size === 0) {
-        console.log('字典为空，尝试重新加载...');
+        console.log('🎯 字典为空，尝试重新加载...');
         await this.loadDictionary();
         dictSet = this.dictionarySet || new Set();
-        console.log('重新加载后字典大小:', dictSet.size);
+        console.log('🎯 重新加载后字典大小:', dictSet.size);
+        
+        if (dictSet.size === 0) {
+          console.error('🎯 字典加载失败，无法检测奖励单词');
+          return [];
+        }
       }
       
       // 3. 提取所有方向、正反向、长度>=3的单词

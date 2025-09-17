@@ -500,7 +500,7 @@ class WordSearchServer {
     // 词频CSV数据API（公开，无需鉴权）
     app.get('/api/frequency/csv', async (req, res) => {
       try {
-        const csvPath = path.join(__dirname, 'BNC_COCA.csv');
+        const csvPath = path.join(__dirname, '..', 'data', 'BNC_COCA.csv');
         console.log('📚 [CSV] 收到请求: /api/frequency/csv');
         console.log('📚 [CSV] 文件路径:', csvPath);
         console.log('📚 [CSV] 开始读取...');

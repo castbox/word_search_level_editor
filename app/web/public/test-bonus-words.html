@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>奖励单词功能测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .action-btn {
+            background-color: #9b59b6;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s ease;
+            margin: 5px;
+        }
+        .action-btn:hover {
+            background-color: #8e44ad;
+            transform: translateY(-2px);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+        .action-btn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .log {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .status.success { background-color: #d4edda; color: #155724; }
+        .status.error { background-color: #f8d7da; color: #721c24; }
+        .status.warning { background-color: #fff3cd; color: #856404; }
+        .grid-display {
+            display: grid;
+            grid-template-columns: repeat(6, 40px);
+            grid-gap: 2px;
+            margin: 10px 0;
+        }
+        .grid-cell {
+            width: 40px;
+            height: 40px;
+            border: 1px solid #ccc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: white;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎯 奖励单词功能测试</h1>
+    
+    <div class="test-section">
+        <h2>1. API连通性测试</h2>
+        <button class="action-btn" onclick="testAPIs()">测试API连通性</button>
+        <div id="api-status" class="status"></div>
+        <div id="api-log" class="log"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>2. 字典加载测试</h2>
+        <button class="action-btn" onclick="testDictionaryLoading()">测试字典加载</button>
+        <div id="dict-status" class="status"></div>
+        <div id="dict-log" class="log"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>3. 模拟网格奖励单词检测</h2>
+        <p>创建一个包含奖励单词的测试网格：</p>
+        <div class="grid-display" id="test-grid"></div>
+        <button class="action-btn" onclick="createTestGrid()">创建测试网格</button>
+        <button class="action-btn" onclick="testBonusWordDetection()">检测奖励单词</button>
+        <div id="bonus-status" class="status"></div>
+        <div id="bonus-log" class="log"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>4. 奖励单词按钮测试</h2>
+        <button id="view-bonus-words" class="action-btn" disabled>查看奖励单词</button>
+        <button class="action-btn" onclick="testButtonState()">检查按钮状态</button>
+        <div id="button-status" class="status"></div>
+        <div id="button-log" class="log"></div>
+    </div>
+
+    <!-- WebAPI适配器 -->
+    <script src="src/scripts/webapi.js"></script>
+    
+    <script>
+        let testGrid = null;
+        let dictionarySet = new Set();
+
+        // 日志函数
+        function log(elementId, message) {
+            const logElement = document.getElementById(elementId);
+            const timestamp = new Date().toLocaleTimeString();
+            logElement.innerHTML += `[${timestamp}] ${message}<br>`;
+            logElement.scrollTop = logElement.scrollHeight;
+        }
+
+        function setStatus(elementId, message, type = 'info') {
+            const statusElement = document.getElementById(elementId);
+            statusElement.textContent = message;
+            statusElement.className = `status ${type}`;
+        }
+
+        // 测试API连通性
+        async function testAPIs() {
+            log('api-log', '开始测试API连通性...');
+            setStatus('api-status', '测试中...', 'warning');
+            
+            let allSuccess = true;
+
+            // 测试关卡API
+            try {
+                const levelsResponse = await fetch('/api/levels');
+                const levelsData = await levelsResponse.json();
+                log('api-log', `✅ 关卡API: ${levelsData.length} 个关卡`);
+            } catch (error) {
+                log('api-log', `❌ 关卡API失败: ${error.message}`);
+                allSuccess = false;
+            }
+
+            // 测试字典API
+            try {
+                const dictResponse = await fetch('/api/dictionary/dictionary');
+                const dictData = await dictResponse.json();
+                if (dictData.success && dictData.content && dictData.content.length > 0) {
+                    log('api-log', `✅ 字典API: ${dictData.content.length} 字符`);
+                } else {
+                    log('api-log', `❌ 字典API: 返回空内容`);
+                    allSuccess = false;
+                }
+            } catch (error) {
+                log('api-log', `❌ 字典API失败: ${error.message}`);
+                allSuccess = false;
+            }
+
+            // 测试词频API
+            try {
+                const freqResponse = await fetch('/api/frequency/csv');
+                const freqData = await freqResponse.json();
+                if (freqData.success && freqData.content && freqData.content.length > 0) {
+                    log('api-log', `✅ 词频API: ${freqData.content.length} 字符`);
+                } else {
+                    log('api-log', `❌ 词频API: 返回空内容`);
+                    allSuccess = false;
+                }
+            } catch (error) {
+                log('api-log', `❌ 词频API失败: ${error.message}`);
+                allSuccess = false;
+            }
+
+            setStatus('api-status', allSuccess ? '所有API测试通过' : '部分API测试失败', allSuccess ? 'success' : 'error');
+        }
+
+        // 测试字典加载
+        async function testDictionaryLoading() {
+            log('dict-log', '开始测试字典加载...');
+            setStatus('dict-status', '加载中...', 'warning');
+            
+            try {
+                // 检查webAPI是否可用
+                if (!window.webAPI) {
+                    log('dict-log', '❌ window.webAPI 不可用');
+                    setStatus('dict-status', 'webAPI不可用', 'error');
+                    return;
+                }
+
+                log('dict-log', '✅ window.webAPI 可用');
+                
+                if (typeof window.webAPI.readDictionary !== 'function') {
+                    log('dict-log', '❌ window.webAPI.readDictionary 方法不存在');
+                    setStatus('dict-status', 'readDictionary方法不存在', 'error');
+                    return;
+                }
+
+                log('dict-log', '✅ window.webAPI.readDictionary 方法存在');
+
+                const dictContent = await window.webAPI.readDictionary('dictionary');
+                
+                if (dictContent && dictContent.length > 0) {
+                    const words = dictContent.split(/,|\n|\r/).map(w => w.trim().toUpperCase()).filter(w => w.length > 0);
+                    dictionarySet = new Set(words);
+                    log('dict-log', `✅ 字典加载成功: ${dictContent.length} 字符, ${dictionarySet.size} 单词`);
+                    log('dict-log', `前5个单词: ${Array.from(dictionarySet).slice(0, 5).join(', ')}`);
+                    setStatus('dict-status', `字典加载成功: ${dictionarySet.size} 单词`, 'success');
+                } else {
+                    log('dict-log', '❌ 字典内容为空');
+                    setStatus('dict-status', '字典内容为空', 'error');
+                }
+            } catch (error) {
+                log('dict-log', `❌ 字典加载失败: ${error.message}`);
+                setStatus('dict-status', `加载失败: ${error.message}`, 'error');
+            }
+        }
+
+        // 创建测试网格
+        function createTestGrid() {
+            // 创建一个6x6的网格，包含一些单词
+            testGrid = [
+                ['C', 'A', 'T', 'S', 'U', 'N'],
+                ['O', 'R', 'E', 'A', 'R', 'D'],
+                ['W', 'O', 'R', 'D', 'I', 'G'],
+                ['S', 'T', 'A', 'R', 'N', 'E'],
+                ['D', 'O', 'G', 'S', 'E', 'T'],
+                ['B', 'I', 'R', 'D', 'S', 'A']
+            ];
+
+            // 显示网格
+            const gridElement = document.getElementById('test-grid');
+            gridElement.innerHTML = '';
+            for (let r = 0; r < 6; r++) {
+                for (let c = 0; c < 6; c++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'grid-cell';
+                    cell.textContent = testGrid[r][c];
+                    gridElement.appendChild(cell);
+                }
+            }
+
+            log('bonus-log', '✅ 测试网格已创建');
+            log('bonus-log', '网格包含的单词: CAT, STAR, DOG, BIRD, WORD, SUN 等');
+        }
+
+        // 测试奖励单词检测
+        async function testBonusWordDetection() {
+            if (!testGrid) {
+                log('bonus-log', '❌ 请先创建测试网格');
+                setStatus('bonus-status', '请先创建测试网格', 'warning');
+                return;
+            }
+
+            if (dictionarySet.size === 0) {
+                log('bonus-log', '❌ 请先加载字典');
+                setStatus('bonus-status', '请先加载字典', 'warning');
+                return;
+            }
+
+            log('bonus-log', '开始检测奖励单词...');
+            setStatus('bonus-status', '检测中...', 'warning');
+
+            try {
+                // 模拟主要单词列表
+                const mainWords = ['CAT', 'DOG', 'BIRD'];
+                log('bonus-log', `主要单词: ${mainWords.join(', ')}`);
+
+                // 检测所有可能的单词
+                const allWords = [];
+                const H = 6, W = 6;
+
+                // 水平方向
+                for (let r = 0; r < H; r++) {
+                    for (let c = 0; c < W; c++) {
+                        for (let length = 3; length <= W - c; length++) {
+                            let word = '';
+                            for (let i = 0; i < length; i++) {
+                                word += testGrid[r][c + i];
+                            }
+                            if (dictionarySet.has(word.toUpperCase())) {
+                                allWords.push(word.toUpperCase());
+                            }
+                            // 反向
+                            let reverseWord = word.split('').reverse().join('');
+                            if (dictionarySet.has(reverseWord.toUpperCase())) {
+                                allWords.push(reverseWord.toUpperCase());
+                            }
+                        }
+                    }
+                }
+
+                // 垂直方向
+                for (let c = 0; c < W; c++) {
+                    for (let r = 0; r < H; r++) {
+                        for (let length = 3; length <= H - r; length++) {
+                            let word = '';
+                            for (let i = 0; i < length; i++) {
+                                word += testGrid[r + i][c];
+                            }
+                            if (dictionarySet.has(word.toUpperCase())) {
+                                allWords.push(word.toUpperCase());
+                            }
+                            // 反向
+                            let reverseWord = word.split('').reverse().join('');
+                            if (dictionarySet.has(reverseWord.toUpperCase())) {
+                                allWords.push(reverseWord.toUpperCase());
+                            }
+                        }
+                    }
+                }
+
+                // 去重
+                const uniqueWords = [...new Set(allWords)];
+                log('bonus-log', `找到所有单词: ${uniqueWords.join(', ')}`);
+
+                // 找出奖励单词（不在主要单词列表中的）
+                const bonusWords = uniqueWords.filter(word => !mainWords.includes(word));
+                log('bonus-log', `奖励单词: ${bonusWords.join(', ')}`);
+
+                if (bonusWords.length > 0) {
+                    setStatus('bonus-status', `检测到 ${bonusWords.length} 个奖励单词`, 'success');
+                    
+                    // 启用奖励单词按钮
+                    const viewBonusBtn = document.getElementById('view-bonus-words');
+                    if (viewBonusBtn) {
+                        viewBonusBtn.disabled = false;
+                        viewBonusBtn.textContent = `查看奖励单词 (${bonusWords.length})`;
+                        viewBonusBtn.classList.remove('disabled');
+                    }
+                } else {
+                    setStatus('bonus-status', '未检测到奖励单词', 'warning');
+                }
+
+            } catch (error) {
+                log('bonus-log', `❌ 检测失败: ${error.message}`);
+                setStatus('bonus-status', `检测失败: ${error.message}`, 'error');
+            }
+        }
+
+        // 测试按钮状态
+        function testButtonState() {
+            const btn = document.getElementById('view-bonus-words');
+            log('button-log', `按钮存在: ${!!btn}`);
+            if (btn) {
+                log('button-log', `按钮禁用状态: ${btn.disabled}`);
+                log('button-log', `按钮文本: ${btn.textContent}`);
+                log('button-log', `按钮类名: ${btn.className}`);
+                log('button-log', `按钮样式display: ${getComputedStyle(btn).display}`);
+                log('button-log', `按钮样式visibility: ${getComputedStyle(btn).visibility}`);
+            }
+            setStatus('button-status', btn ? '按钮状态已检查' : '按钮不存在', btn ? 'success' : 'error');
+        }
+
+        // 页面加载完成后的初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            log('api-log', 'DOM加载完成，开始初始化...');
+            
+            // 绑定奖励单词按钮点击事件
+            const viewBonusBtn = document.getElementById('view-bonus-words');
+            if (viewBonusBtn) {
+                viewBonusBtn.addEventListener('click', () => {
+                    log('button-log', '🎯 奖励单词按钮被点击!');
+                    alert('奖励单词按钮工作正常！');
+                });
+            }
+            
+            testButtonState();
+        });
+    </script>
+</body>
+</html>

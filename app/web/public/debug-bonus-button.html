@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>奖励单词按钮调试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .action-btn {
+            background-color: #9b59b6;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s ease;
+            margin: 5px;
+        }
+        .action-btn:hover {
+            background-color: #8e44ad;
+            transform: translateY(-2px);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+        .action-btn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .log {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        .modal.active {
+            display: block;
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 600px;
+            border-radius: 8px;
+        }
+        .close-modal {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .close-modal:hover {
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 奖励单词按钮调试页面</h1>
+    
+    <div class="test-section">
+        <h2>1. API连通性测试</h2>
+        <button class="action-btn" onclick="testAPIs()">测试所有API</button>
+        <div id="api-log" class="log"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>2. 按钮功能测试</h2>
+        <button id="test-bonus-btn" class="action-btn">测试奖励单词按钮</button>
+        <button class="action-btn" onclick="testButtonState()">检查按钮状态</button>
+        <div id="button-log" class="log"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>3. 字典加载测试</h2>
+        <button class="action-btn" onclick="testDictionaryLoading()">测试字典加载</button>
+        <div id="dict-log" class="log"></div>
+    </div>
+
+    <!-- 奖励单词模态框 -->
+    <div id="bonus-words-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>🎁 奖励单词测试 <span id="bonus-words-count" class="bonus-count">0</span></h3>
+                <span id="bonus-words-modal-close" class="close-modal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <h4>测试奖励单词列表</h4>
+                <ul id="bonus-words">
+                    <li>TEST</li>
+                    <li>WORD</li>
+                    <li>EXAMPLE</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 日志函数
+        function log(elementId, message) {
+            const logElement = document.getElementById(elementId);
+            const timestamp = new Date().toLocaleTimeString();
+            logElement.innerHTML += `[${timestamp}] ${message}<br>`;
+            logElement.scrollTop = logElement.scrollHeight;
+        }
+
+        // 测试所有API
+        async function testAPIs() {
+            log('api-log', '开始测试API连通性...');
+            
+            // 测试关卡API
+            try {
+                const levelsResponse = await fetch('/api/levels');
+                const levelsData = await levelsResponse.json();
+                log('api-log', `✅ 关卡API: ${levelsData.length} 个关卡`);
+            } catch (error) {
+                log('api-log', `❌ 关卡API失败: ${error.message}`);
+            }
+
+            // 测试字典API
+            try {
+                const dictResponse = await fetch('/api/dictionary/dictionary');
+                const dictData = await dictResponse.json();
+                log('api-log', `✅ 字典API: ${dictData.success ? dictData.content.length + ' 字符' : '失败'}`);
+            } catch (error) {
+                log('api-log', `❌ 字典API失败: ${error.message}`);
+            }
+
+            // 测试词频API
+            try {
+                const freqResponse = await fetch('/api/frequency/csv');
+                const freqData = await freqResponse.json();
+                log('api-log', `✅ 词频API: ${freqData.success ? freqData.content.length + ' 字符' : '失败'}`);
+            } catch (error) {
+                log('api-log', `❌ 词频API失败: ${error.message}`);
+            }
+        }
+
+        // 测试按钮状态
+        function testButtonState() {
+            const btn = document.getElementById('test-bonus-btn');
+            log('button-log', `按钮存在: ${!!btn}`);
+            log('button-log', `按钮可见: ${btn ? btn.style.display !== 'none' : 'N/A'}`);
+            log('button-log', `按钮启用: ${btn ? !btn.disabled : 'N/A'}`);
+            log('button-log', `按钮类名: ${btn ? btn.className : 'N/A'}`);
+            log('button-log', `按钮文本: ${btn ? btn.textContent : 'N/A'}`);
+        }
+
+        // 测试字典加载
+        async function testDictionaryLoading() {
+            log('dict-log', '开始测试字典加载...');
+            
+            // 模拟webAPI
+            if (!window.webAPI) {
+                window.webAPI = {
+                    readDictionary: async (type) => {
+                        log('dict-log', `webAPI.readDictionary('${type}') 被调用`);
+                        const response = await fetch(`/api/dictionary/${type}`);
+                        const data = await response.json();
+                        return data.success ? data.content : '';
+                    }
+                };
+                log('dict-log', '✅ webAPI 已模拟创建');
+            }
+
+            try {
+                const dictContent = await window.webAPI.readDictionary('dictionary');
+                log('dict-log', `✅ 字典内容长度: ${dictContent.length}`);
+                
+                if (dictContent && dictContent.length > 0) {
+                    const words = dictContent.split(/,|\n|\r/).map(w => w.trim().toUpperCase()).filter(w => w.length > 0);
+                    log('dict-log', `✅ 解析出单词数: ${words.length}`);
+                    log('dict-log', `前5个单词: ${words.slice(0, 5).join(', ')}`);
+                } else {
+                    log('dict-log', '❌ 字典内容为空');
+                }
+            } catch (error) {
+                log('dict-log', `❌ 字典加载失败: ${error.message}`);
+            }
+        }
+
+        // 初始化奖励单词按钮
+        function initBonusButton() {
+            const btn = document.getElementById('test-bonus-btn');
+            const modal = document.getElementById('bonus-words-modal');
+            const closeBtn = document.getElementById('bonus-words-modal-close');
+
+            if (!btn || !modal || !closeBtn) {
+                log('button-log', '❌ 找不到必要的DOM元素');
+                return;
+            }
+
+            // 绑定点击事件
+            btn.addEventListener('click', () => {
+                log('button-log', '🎯 奖励单词按钮被点击!');
+                modal.classList.add('active');
+            });
+
+            // 绑定关闭事件
+            closeBtn.addEventListener('click', () => {
+                log('button-log', '关闭模态框');
+                modal.classList.remove('active');
+            });
+
+            // 点击外部关闭
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.classList.remove('active');
+                }
+            });
+
+            log('button-log', '✅ 奖励单词按钮初始化完成');
+        }
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            log('button-log', 'DOM加载完成，开始初始化...');
+            initBonusButton();
+            testButtonState();
+        });
+    </script>
+</body>
+</html>

@@ -2144,10 +2144,33 @@ class Navigation {
           console.error('读取字典时出错:', error);
           usedBackupDict = true;
         }
-      } else {
-        console.warn('electronAPI或readDictionary方法不可用，将使用备用字典');
-        usedBackupDict = true;
-      }
+        } else if (window.webAPI && typeof window.webAPI.readDictionary === 'function') {
+          // Web环境
+          console.log('从WebAPI读取字典...');
+          try {
+            const dictContent = await window.webAPI.readDictionary('dictionary');
+            
+            if (dictContent && dictContent.length > 0) {
+              // 支持逗号、换行分割
+              const words = dictContent.split(/,|\n|\r/).map(w => w.trim().toUpperCase()).filter(w => w.length > 0);
+              dictSet = new Set(words);
+              console.log('字典加载完成，单词数:', dictSet.size);
+              
+              // 输出几个示例单词（用于调试）
+              const sampleWords = Array.from(dictSet).slice(0, 5);
+              console.log('字典示例单词:', sampleWords.join(', '));
+            } else {
+              console.warn('未能加载字典内容或字典为空，将使用备用字典');
+              usedBackupDict = true;
+            }
+          } catch (error) {
+            console.error('读取字典时出错:', error);
+            usedBackupDict = true;
+          }
+        } else {
+          console.warn('electronAPI和webAPI都不可用，将使用备用字典');
+          usedBackupDict = true;
+        }
       
       // 如果主字典加载失败，使用备用字典（包含一些常见英文单词）
       if (usedBackupDict || dictSet.size === 0) {

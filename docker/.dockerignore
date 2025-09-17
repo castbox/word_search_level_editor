@@ -1,0 +1,45 @@
+node_modules
+npm-debug.log
+.git
+.gitignore
+README.md
+.env
+.nyc_output
+coverage
+.nyc_output
+.coverage
+.coverage/
+dist
+build
+.DS_Store
+Thumbs.db
+
+# 开发文件
+*.log
+logs/*.log
+
+# 编辑器文件
+.vscode
+.idea
+*.swp
+*.swo
+
+# 操作系统文件
+.DS_Store
+Thumbs.db
+
+# 临时文件
+uploads/*
+!uploads/.gitkeep
+
+# 测试文件
+test/
+tests/
+__tests__/
+*.test.js
+*.spec.js
+
+# 文档
+docs/
+*.md
+!README.md

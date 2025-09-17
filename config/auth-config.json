@@ -1,0 +1,47 @@
+{
+  "auth": {
+    "enabled": true,
+    "type": "users",
+    "sessionTimeout": 7200000,
+    "maxSessions": 20,
+    "requireHttps": false
+  },
+  "users": [
+    {
+      "id": "admin_001",
+      "username": "yanyi",
+      "password": "yanyi123",
+      "role": "admin",
+      "displayName": "管理员",
+      "permissions": ["read", "create", "update", "delete", "manage"],
+      "description": "系统管理员，可以查看所有用户的关卡"
+    },
+    {
+      "id": "user_001",
+      "username": "zehao",
+      "password": "zehao123",
+      "role": "editor",
+      "displayName": "zehao",
+      "permissions": ["read", "create", "update","delete"],
+      "description": "关卡编辑员，只能看到自己创建的关卡"
+    },
+    {
+      "id": "user_002",
+      "username": "hongkun",
+      "password": "hongkun123",
+      "role": "editor",
+      "displayName": "hongkun",
+      "permissions": ["read", "create", "update","delete"],
+      "description": "关卡编辑员，只能看到自己创建的关卡"
+    },
+    {
+      "id": "user_003",
+      "username": "fangge",
+      "password": "fangge123",
+      "role": "editor",
+      "displayName": "fangge",
+      "permissions": ["read", "create", "update","delete"],
+      "description": "关卡编辑员，只能看到自己创建的关卡"
+    }
+  ]
+}

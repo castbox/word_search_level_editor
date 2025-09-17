@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Word Search 关卡编辑器</title>
+  <link rel="stylesheet" href="src/styles/main.css">
+  <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+  <script>
+    // 立即检查electronAPI
+    window.addEventListener('DOMContentLoaded', () => {
+      console.log('DOM已加载，检查electronAPI:', !!window.electronAPI);
+      if (window.electronAPI) {
+        console.log('electronAPI可用的方法:', Object.keys(window.electronAPI));
+      } else {
+        console.error('electronAPI不存在!');
+      }
+    });
+  </script>
+</head>
+<body>
+  <!-- 首页 -->
+  <div id="home-page" class="page active">
+    <div class="home-container">
+      <h1>Word Search 关卡编辑器</h1>
+      <div class="home-buttons">
+        <button id="manual-edit-btn" class="primary-btn">手动编辑关卡</button>
+        <button id="load-level-btn" class="primary-btn">关卡库</button>
+        <button id="simple-edit-btn" class="primary-btn">批量生产空白关卡</button>
+        <button id="replica-edit-btn" class="primary-btn">关卡复刻</button>
+        <button id="single-wordset-btn" class="primary-btn">指定单词关卡</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 关卡列表页面 -->
+  <div id="level-list-page" class="page">
+    <div class="container">
+      <div class="level-list-header">
+        <h2>关卡库</h2>
+        <div class="header-controls">
+          <div class="level-sorting-dropdown">
+            <label for="level-sort-select" class="sort-label">排序:</label>
+            <select id="level-sort-select" class="sort-dropdown">
+              <option value="date-desc">创建时间 ↓</option>
+              <option value="date-asc">创建时间 ↑</option>
+              <option value="level-asc">Level ↑</option>
+              <option value="level-desc">Level ↓</option>
+            </select>
+          </div>
+          <button id="open-config-folder-btn" class="small-btn primary-btn" title="打开1-500关配置文件夹">📁 配置</button>
+          <button id="batch-export-toggle-btn" class="small-btn secondary-btn">批量导出</button>
+        </div>
+      </div>
+      <div class="level-list-container">
+        <div id="level-list" class="level-items">
+          <!-- 关卡项会通过JS动态添加 -->
+          <div class="no-levels-message">暂无保存的关卡</div>
+        </div>
+      </div>
+
+      <div class="buttons-container">
+        <button id="back-to-home" class="secondary-btn">返回首页</button>
+      </div>
+    </div>
+    
+    <!-- 批量导出模态框 -->
+    <div id="batch-export-modal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>批量导出关卡</h3>
+          <span class="close-modal">&times;</span>
+        </div>
+        <div class="modal-body">
+          <div class="batch-selection-controls">
+            <label class="checkbox-label">
+              <input type="checkbox" id="select-all-levels">
+              <span class="checkmark"></span>
+              全选关卡
+            </label>
+            <span id="selected-count" class="selected-count">已选择 0 个关卡</span>
+          </div>
+          <div id="batch-level-list" class="batch-level-list">
+            <!-- 关卡列表会在这里动态生成 -->
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button id="batch-export-btn" class="primary-btn" disabled>导出选中关卡</button>
+          <button id="cancel-batch-export" class="secondary-btn">取消</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 关卡配置页面 -->
+  <div id="level-config-page" class="page">
+    <div class="container">
+      <h2>关卡配置</h2>
+      <div class="config-form">
+        <div class="form-group">
+          <label for="level-title">关卡标题 (可选):</label>
+          <input type="text" id="level-title" placeholder="输入关卡标题">
+        </div>
+        <div class="form-group">
+          <label for="grid-width">网格宽度:</label>
+          <input type="number" id="grid-width" min="5" max="20" value="6">
+        </div>
+        <div class="form-group">
+          <label for="grid-height">网格高度:</label>
+          <input type="number" id="grid-height" min="5" max="20" value="6">
+        </div>
+        <div class="form-group">
+          <label>特殊关卡类型:</label>
+          <div class="special-level-options">
+            <label class="checkbox-label">
+              <input type="checkbox" id="gold-level" name="special-type">
+              <span class="checkmark"></span>
+              金币关
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" id="black-dot-level" name="special-type">
+              <span class="checkmark"></span>
+              黑点关
+            </label>
+          </div>
+        </div>
+        <div class="buttons-container">
+          <button id="create-level-btn" class="primary-btn">创建关卡</button>
+                  <button id="import-config-btn" class="primary-btn">导入配置</button>
+          <button id="config-back-to-home" class="secondary-btn">返回首页</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 关卡编辑页面 -->
+  <div id="editor-page" class="page">
+    <div class="container">
+      <header>
+        <div class="header-left-section">
+          <button id="back-to-config" class="back-btn">&#10094; 返回上一页</button>
+          <!-- 关卡导航按钮 -->
+          <div class="level-navigation-controls" id="level-navigation-controls" style="display: none;">
+            <button id="prev-level-btn" class="nav-level-btn" title="上一个关卡">
+              <span>&#8249;</span>
+            </button>
+            <span id="level-nav-info" class="level-nav-info">1 / 10</span>
+            <button id="next-level-btn" class="nav-level-btn" title="下一个关卡">
+              <span>&#8250;</span>
+            </button>
+          </div>
+        </div>
+        <h1 id="level-title-display">Word Search 关卡编辑器</h1>
+        <div class="controls">
+          <div class="grid-info">
+            <div class="grid-size-controls">
+              <span id="grid-size-display">10x10</span>
+              <div class="size-control-buttons">
+                <div class="size-control-group">
+                  <label>宽度:</label>
+                  <button id="decrease-width" class="size-btn" title="减少宽度">-</button>
+                  <input id="width-input" type="number" min="5" max="20" class="size-input" title="直接输入宽度">
+                  <button id="increase-width" class="size-btn" title="增加宽度">+</button>
+                </div>
+                <div class="size-control-group">
+                  <label>高度:</label>
+                  <button id="decrease-height" class="size-btn" title="减少高度">-</button>
+                  <input id="height-input" type="number" min="5" max="20" class="size-input" title="直接输入高度">
+                  <button id="increase-height" class="size-btn" title="增加高度">+</button>
+                </div>
+              </div>
+            </div>
+            <input type="text" id="edit-level-title" placeholder="编辑关卡标题" class="edit-title-input">
+            <div class="input-group">
+              <label for="edit-level-number" class="input-label">Level:</label>
+              <input type="number" id="edit-level-number" placeholder="关卡等级" class="edit-level-input" min="1" value="1">
+            </div>
+            <div class="input-group">
+              <label for="edit-level-difficulty" class="input-label">Diff:</label>
+              <input type="number" id="edit-level-difficulty" placeholder="关卡难度 (可选)" class="edit-difficulty-input" min="0" value="0">
+            </div>
+            <div class="editor-special-options">
+              <label class="checkbox-label">
+                <input type="checkbox" id="editor-gold-level" name="editor-special-type">
+                <span class="checkmark"></span>
+                金币关
+              </label>
+              <label class="checkbox-label">
+                <input type="checkbox" id="editor-black-dot-level" name="editor-special-type">
+                <span class="checkmark"></span>
+                黑点关
+              </label>
+              <label class="checkbox-label">
+                <input type="checkbox" id="editor-has-rads-reward">
+                <span class="checkmark"></span>
+                Rads奖励
+              </label>
+            </div>
+          </div>
+          <div class="file-controls">
+            <button id="generate-level">生成配置文件</button>
+            <button id="save-level">保存关卡</button>
+            <button id="help-btn" class="help-btn" title="查看使用帮助">?</button>
+          </div>
+        </div>
+      </header>
+      
+      <div class="main-content">
+        <div class="grid-container">
+          <div id="grid"></div>
+          <div class="grid-actions">
+            <button id="reset-grid" title="重置整个网格，清除所有单词和字母">重置网格</button>
+            <button id="auto-fill">自动填充空白网格</button>
+            <button id="check-duplicates" title="检查网格中是否存在重复单词">检查重复单词</button>
+            <button id="preview-level">预览关卡</button>
+          </div>
+        </div>
+        
+        <div class="word-list-container">
+          <h2>单词列表</h2>
+          <div class="word-controls">
+            <input type="text" id="new-word" placeholder="输入新单词">
+            <button id="add-word">添加</button>
+          </div>
+          <ul id="word-list"></ul>
+          <div class="word-status">
+            <h3>已放置单词</h3>
+            <ul id="placed-words"></ul>
+          </div>
+          <div class="button-container" style="margin-top: 15px; text-align: center;">
+            <button id="view-bonus-words" class="action-btn">查看奖励单词</button>
+            <button id="refresh-bonus-words" class="action-btn" title="手动刷新奖励单词检测">🔄 刷新</button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 奖励单词模态框 -->
+      <div id="bonus-words-modal" class="modal">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3>本关奖励单词 <span id="bonus-words-count" class="bonus-count">0</span></h3>
+            <span id="bonus-words-modal-close" class="close-modal">&times;</span>
+          </div>
+          <div class="modal-body">
+            <h4>🎁 奖励单词列表</h4>
+            <ul id="bonus-words"></ul>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 重复单词检查模态框 -->
+      <div id="duplicate-check-modal" class="modal">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3>🔍 重复单词检查结果</h3>
+            <span class="close-modal">&times;</span>
+          </div>
+          <div class="modal-body">
+            <div id="duplicate-result-content">
+              <!-- 检查结果将在这里显示 -->
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 使用帮助模态框 -->
+      <div id="help-modal" class="modal">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3>使用帮助</h3>
+            <span class="close-modal">&times;</span>
+          </div>
+          <div class="modal-body">
+            <div class="usage-guide">
+              <p>使用方法:</p>
+              <ul>
+                <li>点击单词进行选择，然后移动到网格中放置，按R键切换方向</li>
+                <li>双击网格中的单元格可以直接编辑字母</li>
+                <li>单词可以在相同字母位置交叉（如:"cat"和"hat"共享"a"字母）</li>
+                <li>交叉单词使用渐变色显示，方便识别</li>
+                <li>"自动填充空白网格"按钮可以智能填充所有空白格子</li>
+                <li>"保存关卡"将保存到编辑器根目录下的levels文件夹</li>
+                <li>"生成配置文件"允许选择保存位置，可用于游戏导入</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- 预览关卡页面 -->
+  <div id="preview-page" class="page">
+    <div class="container preview-container">
+      <header class="preview-header">
+        <button id="back-to-editor" class="back-btn">&#10094; 返回</button>
+        <button id="save-preview-image" class="action-btn">保存为图片</button>
+      </header>
+      
+      <div id="preview-capture" class="preview-content">
+        <h1 id="preview-title" class="preview-main-title">关卡标题</h1>
+        
+        <div class="preview-words">
+          <div id="preview-word-list"></div>
+        </div>
+        
+        <div class="preview-grid-wrapper">
+          <div class="preview-grid-container">
+            <div id="preview-grid"></div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="preview-controls">
+        <label class="special-preview-toggle">
+          <input type="checkbox" id="special-words-preview">
+          <span class="toggle-slider"></span>
+          <span class="toggle-label">显示特殊单词图标</span>
+        </label>
+      </div>
+      
+      <!-- 已删除关卡导航 -->
+    </div>
+  </div>
+
+  <div id="status-message"></div>
+
+  <script src="src/scripts/wordFrequency.js"></script>
+  <script src="src/scripts/navigation.js"></script>
+  <script src="src/scripts/grid.js"></script>
+  <script src="src/scripts/wordList.js"></script>
+  <script src="src/scripts/app.js"></script>
+</body>
+</html> 

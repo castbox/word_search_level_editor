@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>调试页面 - Word Search Editor</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            padding: 20px; 
+            background: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 10px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #45a049; }
+        button:disabled { background: #ccc; cursor: not-allowed; }
+        .result { 
+            margin: 10px 0; 
+            padding: 10px; 
+            background: #f9f9f9; 
+            border-left: 4px solid #4CAF50;
+        }
+        .error { border-left-color: #f44336; }
+    </style>
+</head>
+<body>
+    <h1>🔧 Word Search Editor 调试页面</h1>
+    
+    <div class="test-section">
+        <h2>📡 API 连接测试</h2>
+        <button onclick="testAPI()">测试 API 连接</button>
+        <button onclick="testDictionary()">测试字典读取</button>
+        <div id="api-result" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>🎯 Bonus Words 测试</h2>
+        <button onclick="testBonusWords()">测试 Bonus Words 功能</button>
+        <div id="bonus-result" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>📊 控制台日志</h2>
+        <button onclick="clearConsole()">清空控制台</button>
+        <button onclick="showConsole()">显示最近日志</button>
+        <div id="console-result" class="result"></div>
+    </div>
+
+    <script src="src/scripts/webapi.js"></script>
+    <script>
+        // 设置为网页版
+        window.isWebVersion = true;
+        
+        // 初始化 WebAPI
+        const webAPI = new WebAPI();
+        window.electronAPI = webAPI;
+        
+        // 控制台日志收集
+        const logs = [];
+        const originalLog = console.log;
+        const originalError = console.error;
+        const originalWarn = console.warn;
+        
+        console.log = function(...args) {
+            logs.push({type: 'log', args, time: new Date().toLocaleTimeString()});
+            originalLog.apply(console, args);
+        };
+        
+        console.error = function(...args) {
+            logs.push({type: 'error', args, time: new Date().toLocaleTimeString()});
+            originalError.apply(console, args);
+        };
+        
+        console.warn = function(...args) {
+            logs.push({type: 'warn', args, time: new Date().toLocaleTimeString()});
+            originalWarn.apply(console, args);
+        };
+
+        async function testAPI() {
+            const result = document.getElementById('api-result');
+            result.innerHTML = '🔄 测试中...';
+            
+            try {
+                const response = await fetch('http://localhost:3000/api/levels');
+                const data = await response.json();
+                result.innerHTML = `✅ API 连接正常<br>关卡数量: ${data.length}`;
+                result.className = 'result';
+            } catch (error) {
+                result.innerHTML = `❌ API 连接失败: ${error.message}`;
+                result.className = 'result error';
+            }
+        }
+
+        async function testDictionary() {
+            const result = document.getElementById('api-result');
+            result.innerHTML = '🔄 测试字典...';
+            
+            try {
+                const dictResult = await window.electronAPI.readDictionary();
+                if (dictResult && dictResult.success) {
+                    const wordCount = dictResult.content.split(/,|\n|\r/).filter(w => w.trim()).length;
+                    result.innerHTML = `✅ 字典读取成功<br>单词数量: ${wordCount}`;
+                    result.className = 'result';
+                } else {
+                    result.innerHTML = `❌ 字典读取失败: ${dictResult?.error || '未知错误'}`;
+                    result.className = 'result error';
+                }
+            } catch (error) {
+                result.innerHTML = `❌ 字典读取异常: ${error.message}`;
+                result.className = 'result error';
+            }
+        }
+
+        async function testBonusWords() {
+            const result = document.getElementById('bonus-result');
+            result.innerHTML = '🔄 测试 Bonus Words...';
+            
+            try {
+                // 模拟简单的网格和单词
+                const testGrid = [
+                    ['C', 'A', 'T', 'S'],
+                    ['O', 'G', 'H', 'U'],
+                    ['D', 'O', 'G', 'N'],
+                    ['E', 'L', 'K', 'S']
+                ];
+                
+                const testWords = ['CAT', 'DOG'];
+                
+                // 创建一个简单的Grid实例来测试
+                const testGridInstance = {
+                    dictionarySet: new Set(),
+                    async loadDictionary() {
+                        const dictResult = await window.electronAPI.readDictionary();
+                        if (dictResult && dictResult.success) {
+                            const words = dictResult.content.split(/,|\n|\r/).map(w => w.trim().toUpperCase()).filter(w => w.length > 0);
+                            this.dictionarySet = new Set(words);
+                        }
+                    }
+                };
+                
+                await testGridInstance.loadDictionary();
+                
+                result.innerHTML = `✅ Bonus Words 测试完成<br>字典大小: ${testGridInstance.dictionarySet.size}`;
+                result.className = 'result';
+            } catch (error) {
+                result.innerHTML = `❌ Bonus Words 测试失败: ${error.message}`;
+                result.className = 'result error';
+            }
+        }
+
+        function clearConsole() {
+            logs.length = 0;
+            document.getElementById('console-result').innerHTML = '✅ 控制台已清空';
+        }
+
+        function showConsole() {
+            const result = document.getElementById('console-result');
+            const recentLogs = logs.slice(-10); // 显示最近10条日志
+            
+            if (recentLogs.length === 0) {
+                result.innerHTML = '📝 暂无日志';
+                return;
+            }
+            
+            const logHtml = recentLogs.map(log => {
+                const color = log.type === 'error' ? 'red' : log.type === 'warn' ? 'orange' : 'black';
+                const args = log.args.map(arg => typeof arg === 'object' ? JSON.stringify(arg) : String(arg)).join(' ');
+                return `<div style="color: ${color}; margin: 2px 0;">[${log.time}] ${log.type.toUpperCase()}: ${args}</div>`;
+            }).join('');
+            
+            result.innerHTML = `📋 最近日志:<br>${logHtml}`;
+        }
+
+        // 页面加载时自动测试API
+        window.addEventListener('load', () => {
+            console.log('调试页面已加载');
+            testAPI();
+        });
+    </script>
+</body>
+</html>

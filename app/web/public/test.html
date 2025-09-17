@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Word Search Level Editor - 功能测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+        }
+        .btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+            transition: background 0.3s;
+        }
+        .btn:hover {
+            background: #45a049;
+        }
+        .btn.danger {
+            background: #f44336;
+        }
+        .btn.danger:hover {
+            background: #da190b;
+        }
+        .result {
+            margin: 10px 0;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 14px;
+        }
+        .success {
+            color: #4CAF50;
+        }
+        .error {
+            color: #f44336;
+        }
+        .info {
+            color: #2196F3;
+        }
+        h1, h2 {
+            text-align: center;
+        }
+        .status {
+            text-align: center;
+            font-size: 18px;
+            margin: 20px 0;
+        }
+        .main-link {
+            text-align: center;
+            margin: 20px 0;
+        }
+        .main-link a {
+            color: #FFD700;
+            text-decoration: none;
+            font-size: 20px;
+            font-weight: bold;
+        }
+        .main-link a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎮 Word Search Level Editor</h1>
+        <h2>网页服务器版本 - 功能测试</h2>
+        
+        <div class="status" id="connectionStatus">
+            🔄 正在检查服务器连接...
+        </div>
+
+        <div class="main-link">
+            <a href="/">🎯 进入主编辑器</a>
+        </div>
+
+        <div class="test-section">
+            <h3>🔧 API功能测试</h3>
+            <button class="btn" onclick="testConnection()">测试连接</button>
+            <button class="btn" onclick="testGetLevels()">获取关卡列表</button>
+            <button class="btn" onclick="testSaveLevel()">测试保存关卡</button>
+            <button class="btn" onclick="testDeleteLevel()">测试删除关卡</button>
+            <div class="result" id="apiResult"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>📊 服务器信息</h3>
+            <button class="btn" onclick="getServerInfo()">获取服务器信息</button>
+            <div class="result" id="serverInfo"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>📁 文件操作测试</h3>
+            <button class="btn" onclick="testFileUpload()">测试文件上传</button>
+            <input type="file" id="fileInput" accept=".json" style="display: none;">
+            <div class="result" id="fileResult"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>🌐 网络信息</h3>
+            <div class="result" id="networkInfo">
+                <div class="info">本地访问: <strong>http://localhost:3000</strong></div>
+                <div class="info">团队访问: <strong id="teamAccess">获取中...</strong></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="src/scripts/webapi.js"></script>
+    <script>
+        let testAPI;
+
+        // 初始化
+        window.addEventListener('load', async () => {
+            testAPI = new WebAPI();
+            await checkInitialConnection();
+            await getNetworkInfo();
+        });
+
+        async function checkInitialConnection() {
+            const statusEl = document.getElementById('connectionStatus');
+            try {
+                const isConnected = await testAPI.checkConnection();
+                if (isConnected) {
+                    statusEl.innerHTML = '✅ 服务器连接正常';
+                    statusEl.className = 'status success';
+                } else {
+                    statusEl.innerHTML = '❌ 无法连接到服务器';
+                    statusEl.className = 'status error';
+                }
+            } catch (error) {
+                statusEl.innerHTML = '❌ 连接检查失败: ' + error.message;
+                statusEl.className = 'status error';
+            }
+        }
+
+        async function testConnection() {
+            const resultEl = document.getElementById('apiResult');
+            try {
+                const response = await fetch('/health');
+                const data = await response.json();
+                resultEl.innerHTML = `<div class="success">✅ 连接测试成功</div><pre>${JSON.stringify(data, null, 2)}</pre>`;
+            } catch (error) {
+                resultEl.innerHTML = `<div class="error">❌ 连接失败: ${error.message}</div>`;
+            }
+        }
+
+        async function testGetLevels() {
+            const resultEl = document.getElementById('apiResult');
+            try {
+                const levels = await testAPI.getSavedLevels();
+                resultEl.innerHTML = `<div class="success">✅ 成功获取 ${levels.length} 个关卡</div><pre>${JSON.stringify(levels.slice(0, 2), null, 2)}${levels.length > 2 ? '\n... (显示前2个)' : ''}</pre>`;
+            } catch (error) {
+                resultEl.innerHTML = `<div class="error">❌ 获取关卡失败: ${error.message}</div>`;
+            }
+        }
+
+        async function testSaveLevel() {
+            const resultEl = document.getElementById('apiResult');
+            try {
+                const testLevel = {
+                    level: 999,
+                    title: '测试关卡',
+                    type: 1,
+                    grid: ['TEST', 'GRID', 'DATA', 'HERE'],
+                    words: [{word: 'TEST', pos: '0,0;0,3'}],
+                    sentence: '',
+                    bonus: '',
+                    id: 'TEST_' + Date.now()
+                };
+                
+                const result = await testAPI.saveLevel(testLevel);
+                resultEl.innerHTML = `<div class="success">✅ 测试关卡保存成功</div><pre>${JSON.stringify(result, null, 2)}</pre>`;
+            } catch (error) {
+                resultEl.innerHTML = `<div class="error">❌ 保存测试失败: ${error.message}</div>`;
+            }
+        }
+
+        async function testDeleteLevel() {
+            const resultEl = document.getElementById('apiResult');
+            try {
+                // 先获取关卡列表，找到测试关卡
+                const levels = await testAPI.getSavedLevels();
+                const testLevel = levels.find(l => l.title === '测试关卡');
+                
+                if (!testLevel) {
+                    resultEl.innerHTML = `<div class="info">ℹ️ 没有找到测试关卡，请先运行"测试保存关卡"</div>`;
+                    return;
+                }
+                
+                const result = await testAPI.deleteLevel(testLevel._filePath);
+                resultEl.innerHTML = `<div class="success">✅ 测试关卡删除成功</div><pre>${JSON.stringify(result, null, 2)}</pre>`;
+            } catch (error) {
+                resultEl.innerHTML = `<div class="error">❌ 删除测试失败: ${error.message}</div>`;
+            }
+        }
+
+        async function getServerInfo() {
+            const resultEl = document.getElementById('serverInfo');
+            try {
+                const info = await testAPI.getServerInfo();
+                resultEl.innerHTML = `<div class="success">✅ 服务器信息</div><pre>${JSON.stringify(info, null, 2)}</pre>`;
+            } catch (error) {
+                resultEl.innerHTML = `<div class="error">❌ 获取信息失败: ${error.message}</div>`;
+            }
+        }
+
+        async function testFileUpload() {
+            const fileInput = document.getElementById('fileInput');
+            const resultEl = document.getElementById('fileResult');
+            
+            fileInput.onchange = async (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                
+                try {
+                    resultEl.innerHTML = '<div class="info">🔄 正在上传文件...</div>';
+                    const result = await testAPI.batchImportLevels(file);
+                    resultEl.innerHTML = `<div class="success">✅ 批量导入成功: ${result.imported}/${result.total} 个关卡</div><pre>${JSON.stringify(result, null, 2)}</pre>`;
+                } catch (error) {
+                    resultEl.innerHTML = `<div class="error">❌ 批量导入失败: ${error.message}</div>`;
+                }
+            };
+            
+            fileInput.click();
+        }
+
+        async function getNetworkInfo() {
+            try {
+                const response = await fetch('/api/info');
+                const info = await response.json();
+                
+                // 尝试获取本机IP（简单方法）
+                const teamAccessEl = document.getElementById('teamAccess');
+                teamAccessEl.innerHTML = '获取本机IP地址中...';
+                
+                // 由于浏览器安全限制，我们无法直接获取本机IP
+                // 这里显示一个说明
+                setTimeout(() => {
+                    teamAccessEl.innerHTML = `
+                        <span>http://[您的IP地址]:3000</span><br>
+                        <small style="color: #FFD700;">
+                            💡 在终端中查看服务器启动日志获取确切IP地址<br>
+                            或运行: ipconfig getifaddr en0 (Mac) / ipconfig (Windows)
+                        </small>
+                    `;
+                }, 1000);
+            } catch (error) {
+                console.error('获取网络信息失败:', error);
+            }
+        }
+    </script>
+</body>
+</html>

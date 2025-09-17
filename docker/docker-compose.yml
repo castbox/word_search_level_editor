@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  word-search-editor:
+    build: .
+    container_name: word-search-editor
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+    volumes:
+      # 数据持久化
+      - ./levels:/app/levels
+      - ./uploads:/app/uploads
+      - ./logs:/app/logs
+      # 配置文件
+      - ./auth-config.json:/app/auth-config.json
+      - ./BNC_COCA.csv:/app/BNC_COCA.csv:ro
+      - ./dictionary.txt:/app/dictionary.txt:ro
+    networks:
+      - word-search-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # 可选：Nginx反向代理
+  nginx:
+    image: nginx:alpine
+    container_name: word-search-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro  # SSL证书目录（可选）
+    depends_on:
+      - word-search-editor
+    networks:
+      - word-search-network
+
+networks:
+  word-search-network:
+    driver: bridge

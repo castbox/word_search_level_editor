@@ -7,7 +7,7 @@ echo "🏠 设置本地开发环境变量..."
 
 # 基础配置
 export NODE_ENV=development
-export PORT=3000
+export PORT=9006
 
 # 本地数据目录配置（您的实际本地路径）
 export LEVELS_DIR="/Users/yan/Library/Application Support/word_search_level_editor/levels"

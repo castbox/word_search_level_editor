@@ -7,7 +7,7 @@ echo "🔧 设置 Word Search Level Editor 环境变量..."
 
 # 基础配置
 export NODE_ENV=production
-export PORT=8080
+export PORT=9006
 
 # 数据目录配置（根据您的服务器路径修改）
 export LEVELS_DIR="/home/yanyi/word_search_level_editor/user_data/levels"

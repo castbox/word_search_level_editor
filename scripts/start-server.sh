@@ -34,13 +34,13 @@ fi
 # 确保使用服务器版本的package.json
 cp package-server.json package.json
 
-# 加载本地环境配置（如果存在）
-if [ -f "config/local-config.sh" ]; then
-    echo "🔧 加载本地环境配置: config/local-config.sh"
+# 加载服务器环境配置（如果存在）
+if [ -f "config/server-config.sh" ]; then
+    echo "🔧 加载服务器环境配置: config/server-config.sh"
     # shellcheck disable=SC1091
-    source config/local-config.sh
+    source config/server-config.sh
 else
-    echo "⚠️  未找到本地配置，使用默认配置"
+    echo "⚠️  未找到服务器配置，使用默认配置"
 fi
 
 echo "🔄 启动服务器..."

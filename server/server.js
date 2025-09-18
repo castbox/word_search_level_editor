@@ -8,7 +8,7 @@ const { networkInterfaces } = require('os');
 const AuthManager = require('./auth');
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 // 初始化权限管理器
 const authManager = new AuthManager();

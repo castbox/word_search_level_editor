@@ -7,16 +7,16 @@ echo "🔧 设置 Word Search Level Editor 环境变量..."
 
 # 基础配置
 export NODE_ENV=production
-export PORT=3000
+export PORT=8080
 
 # 数据目录配置（根据您的服务器路径修改）
-export LEVELS_DIR="/opt/word_search_level_editor/levels"
-export CONFIGS_DIR="/opt/word_search_level_editor/configs"
-export DICTIONARIES_DIR="/opt/word_search_level_editor"
+export LEVELS_DIR="/home/yanyi/word_search_level_editor/user_data/levels"
+export CONFIGS_DIR="/home/yanyi/word_search_level_editor/user_data/configs"
+export DICTIONARIES_DIR="/home/yanyi/word_search_level_editor/data"
 
 # 可选配置
 export MAX_FILE_SIZE="50mb"
-export UPLOAD_DIR="/opt/word_search_level_editor/uploads"
+export UPLOAD_DIR="/home/yanyi/word_search_level_editor/user_data/uploads"
 
 echo "✅ 环境变量配置完成:"
 echo "   NODE_ENV = $NODE_ENV"

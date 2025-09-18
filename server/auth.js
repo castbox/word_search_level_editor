@@ -11,7 +11,9 @@ class AuthManager {
 
   loadAuthConfig() {
     try {
-      const configPath = path.join(__dirname, '..', 'config', 'auth-config.json');
+      const configPath = process.env.CONFIGS_DIR 
+        ? path.join(process.env.CONFIGS_DIR, 'auth-config.json')
+        : path.join(__dirname, '..', 'config', 'auth-config.json');
       const configData = fs.readFileSync(configPath, 'utf8');
       const config = JSON.parse(configData);
       console.log('🔐 权限配置已加载');

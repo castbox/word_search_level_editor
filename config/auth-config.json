@@ -48,7 +48,7 @@
       "username": "ounianjing",
       "password": "ounianjing",
       "role": "editor",
-      "displayName": "fangge",
+      "displayName": "ounianjing",
       "permissions": ["read", "create", "update","delete"],
       "description": "关卡编辑员，只能看到自己创建的关卡"
     }

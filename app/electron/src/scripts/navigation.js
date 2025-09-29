@@ -232,13 +232,17 @@ class Navigation {
         valueA = parseInt(a.level, 10) || 0;
         valueB = parseInt(b.level, 10) || 0;
       } else if (field === 'createdAt') {
-        // 从metadata中获取创建时间，如果没有则使用当前时间
-        valueA = a.metadata && a.metadata.createdAt 
-          ? new Date(a.metadata.createdAt).getTime() 
-          : 0;
-        valueB = b.metadata && b.metadata.createdAt 
-          ? new Date(b.metadata.createdAt).getTime() 
-          : 0;
+        // 优先使用createdAt，然后lastModifiedAt，最后使用文件修改时间
+        valueA = a.createdAt 
+          ? new Date(a.createdAt).getTime()
+          : (a.lastModifiedAt 
+            ? new Date(a.lastModifiedAt).getTime()
+            : (a._lastModified ? new Date(a._lastModified).getTime() : 0));
+        valueB = b.createdAt 
+          ? new Date(b.createdAt).getTime()
+          : (b.lastModifiedAt 
+            ? new Date(b.lastModifiedAt).getTime()
+            : (b._lastModified ? new Date(b._lastModified).getTime() : 0));
       } else {
         // 默认使用标题
         valueA = (a.title || '').toLowerCase();

@@ -40,7 +40,7 @@
       "password": "fangge123",
       "role": "editor",
       "displayName": "fangge",
-      "permissions": ["read", "create", "update","delete"],
+      "permissions": ["read", "create", "update","delete","manage","view_all"],
       "description": "关卡编辑员，只能看到自己创建的关卡"
     },
     {

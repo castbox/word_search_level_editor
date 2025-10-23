@@ -293,6 +293,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  // 初始化自动保存管理器（不自动启动，由 navigateTo 方法控制）
+  if (typeof AutoSaveManager !== 'undefined') {
+    window.autoSaveManager = new AutoSaveManager();
+    console.log('✅ 自动保存管理器已创建（等待进入编辑器页面时启动）');
+  }
+
   
   // 绑定按钮
   const saveButton = document.getElementById('save-level');
@@ -1266,6 +1272,12 @@ window.loadLevelIntoEditor = function(levelData) {
     }, 100);
     
     console.log('关卡加载完成');
+    
+    // 重置自动保存状态（因为刚加载的关卡是已保存状态）
+    if (window.autoSaveManager) {
+      window.autoSaveManager.markAsSaved();
+      console.log('✅ 已重置自动保存状态为"已保存"');
+    }
   } catch (error) {
     console.error('加载关卡到编辑器时发生错误:', error);
     showStatusMessage(`加载关卡失败: ${error.message}`, 'error');

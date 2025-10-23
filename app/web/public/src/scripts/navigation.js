@@ -649,6 +649,14 @@ class Navigation {
     }
     console.log(`正在导航到页面: ${pageId}`);
     
+    // 如果离开编辑器页面，停止自动保存管理器
+    if (this.currentPage === 'editor' && pageId !== 'editor') {
+      if (window.autoSaveManager) {
+        window.autoSaveManager.stop();
+        console.log('⏸️ 离开编辑器，停止自动保存管理器');
+      }
+    }
+    
     try {
     // 隐藏所有页面
     Object.values(this.pages).forEach(page => {
@@ -669,6 +677,14 @@ class Navigation {
         
         // 如果进入编辑器页面，确保特殊选项状态同步
         if (pageId === 'editor') {
+          // 启动自动保存管理器
+          if (window.autoSaveManager) {
+            window.autoSaveManager.start();
+            // 重置为已保存状态（因为刚加载关卡）
+            window.autoSaveManager.markAsSaved();
+            console.log('🚀 进入编辑器，启动自动保存管理器');
+          }
+          
           setTimeout(() => {
             this.syncSpecialOptions();
           }, 50);

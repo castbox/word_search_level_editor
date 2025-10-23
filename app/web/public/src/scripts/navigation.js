@@ -19,8 +19,8 @@ class Navigation {
     
     // 保存当前排序状态
     this.sortConfig = {
-      field: 'createdAt', // 默认按创建时间排序
-      order: 'desc'       // 默认降序（新到旧）
+      field: 'lastModified', // 默认按最后保存时间排序
+      order: 'desc'          // 默认降序（新到旧）
     };
     
     // 保存关卡列表数据，方便排序
@@ -231,10 +231,12 @@ class Navigation {
         // 将字符串转为数字进行比较，确保undefined或null转为0
         valueA = parseInt(a.level, 10) || 0;
         valueB = parseInt(b.level, 10) || 0;
-      } else if (field === 'createdAt') {
-        // 直接使用文件系统时间进行排序
-        valueA = a._lastModified ? new Date(a._lastModified).getTime() : 0;
-        valueB = b._lastModified ? new Date(b._lastModified).getTime() : 0;
+      } else if (field === 'lastModified') {
+        // 按最后保存时间排序：优先使用lastModifiedAt，然后_lastModified
+        const timeA = a.lastModifiedAt || a._lastModified;
+        const timeB = b.lastModifiedAt || b._lastModified;
+        valueA = timeA ? new Date(timeA).getTime() : 0;
+        valueB = timeB ? new Date(timeB).getTime() : 0;
       } else {
         // 默认使用标题
         valueA = (a.title || '').toLowerCase();
@@ -276,11 +278,11 @@ class Navigation {
     const metaDiv = document.createElement('div');
     metaDiv.className = 'level-metadata';
     
-    // 创建时间 - 优先使用createdAt，然后使用_lastModified
-    const timeField = levelData.createdAt || levelData.lastModifiedAt || levelData._lastModified;
+    // 最后保存时间 - 优先使用lastModifiedAt或_lastModified
+    const timeField = levelData.lastModifiedAt || levelData._lastModified || levelData.createdAt;
     if (timeField) {
       const date = new Date(timeField);
-      metaDiv.textContent = `创建于: ${date.toLocaleString()}`;
+      metaDiv.textContent = `最后保存: ${date.toLocaleString()}`;
     }
     
     // 网格大小

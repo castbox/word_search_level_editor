@@ -160,7 +160,7 @@ class AuthManager {
     }
 
     // 管理员可以查看所有关卡
-    if (user.permissions.includes('view_all')) {
+    if (user.role === 'admin' || user.permissions.includes('view_all')) {
       return true;
     }
 

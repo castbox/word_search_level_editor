@@ -232,17 +232,9 @@ class Navigation {
         valueA = parseInt(a.level, 10) || 0;
         valueB = parseInt(b.level, 10) || 0;
       } else if (field === 'createdAt') {
-        // 优先使用createdAt，然后lastModifiedAt，最后使用文件修改时间
-        valueA = a.createdAt 
-          ? new Date(a.createdAt).getTime()
-          : (a.lastModifiedAt 
-            ? new Date(a.lastModifiedAt).getTime()
-            : (a._lastModified ? new Date(a._lastModified).getTime() : 0));
-        valueB = b.createdAt 
-          ? new Date(b.createdAt).getTime()
-          : (b.lastModifiedAt 
-            ? new Date(b.lastModifiedAt).getTime()
-            : (b._lastModified ? new Date(b._lastModified).getTime() : 0));
+        // 直接使用文件系统时间进行排序
+        valueA = a._lastModified ? new Date(a._lastModified).getTime() : 0;
+        valueB = b._lastModified ? new Date(b._lastModified).getTime() : 0;
       } else {
         // 默认使用标题
         valueA = (a.title || '').toLowerCase();
@@ -280,36 +272,35 @@ class Navigation {
     infoDiv.appendChild(titleDiv);
     
     // 关卡元数据
-    if (levelData.metadata) {
-      const metaDiv = document.createElement('div');
-      metaDiv.className = 'level-metadata';
-      
-      // 创建时间
-      if (levelData.metadata.createdAt) {
-        const date = new Date(levelData.metadata.createdAt);
-        metaDiv.textContent = `创建于: ${date.toLocaleString()}`;
-      }
-      
-      // 网格大小
-      if (levelData.grid && levelData.grid.width && levelData.grid.height) {
-        metaDiv.textContent += ` | 大小: ${levelData.grid.width}x${levelData.grid.height}`;
-      }
-      
-      // 单词数量
-      if (levelData.wordList && levelData.wordList.words) {
-        metaDiv.textContent += ` | 单词数: ${levelData.wordList.words.length}`;
-      } else if (levelData.words) {
-        // 兼容不同格式的关卡数据
-        metaDiv.textContent += ` | 单词数: ${levelData.words.length}`;
-      }
-      
-      // 显示关卡等级（如果没有添加到标题中）
-      if (!levelData.level && metaDiv.textContent) {
-        metaDiv.textContent += ' | Level: 1';
-      }
-      
-      infoDiv.appendChild(metaDiv);
+    const metaDiv = document.createElement('div');
+    metaDiv.className = 'level-metadata';
+    
+    // 创建时间 - 优先使用createdAt，然后使用_lastModified
+    const timeField = levelData.createdAt || levelData.lastModifiedAt || levelData._lastModified;
+    if (timeField) {
+      const date = new Date(timeField);
+      metaDiv.textContent = `创建于: ${date.toLocaleString()}`;
     }
+    
+    // 网格大小
+    if (levelData.grid && levelData.grid.width && levelData.grid.height) {
+      metaDiv.textContent += ` | 大小: ${levelData.grid.width}x${levelData.grid.height}`;
+    }
+    
+    // 单词数量
+    if (levelData.wordList && levelData.wordList.words) {
+      metaDiv.textContent += ` | 单词数: ${levelData.wordList.words.length}`;
+    } else if (levelData.words) {
+      // 兼容不同格式的关卡数据
+      metaDiv.textContent += ` | 单词数: ${levelData.words.length}`;
+    }
+    
+    // 显示关卡等级（如果没有添加到标题中）
+    if (!levelData.level && metaDiv.textContent) {
+      metaDiv.textContent += ' | Level: 1';
+    }
+    
+    infoDiv.appendChild(metaDiv);
     
     // 创建操作按钮区域
     const actionsDiv = document.createElement('div');

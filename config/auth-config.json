@@ -2,7 +2,7 @@
   "auth": {
     "enabled": true,
     "type": "users",
-    "sessionTimeout": 7200000,
+    "sessionTimeout": 28800000,
     "maxSessions": 20,
     "requireHttps": false
   },

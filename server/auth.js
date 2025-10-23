@@ -159,8 +159,8 @@ class AuthManager {
       return true; // 权限未启用时允许访问
     }
 
-    // 管理员可以查看所有关卡
-    if (user.role === 'admin' || user.permissions.includes('view_all')) {
+    // 检查是否有查看所有关卡的权限
+    if (user.permissions.includes('view_all')) {
       return true;
     }
 

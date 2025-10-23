@@ -450,6 +450,14 @@ class WordFrequency {
       this.levelAnalysis.mergedLevels.set(levelNum, levelData);
     }
     
+    // 计算最大关卡等级作为统计范围
+    if (this.levelAnalysis.mergedLevels.size > 0) {
+      const maxLevel = Math.max(...this.levelAnalysis.mergedLevels.keys());
+      this.levelAnalysis.currentLevelNumber = maxLevel;
+      this.currentLevelNumber = maxLevel; // 保持兼容
+      console.log(`自动设置统计范围为: 1-${maxLevel}`);
+    }
+    
     console.log(`合并完成，共 ${this.levelAnalysis.mergedLevels.size} 个关卡`);
   }
   

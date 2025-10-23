@@ -71,9 +71,12 @@
             "col": 3
           }
         ],
-        "direction": "horizontal",
         "color": "#16a085",
-        "isDragged": true
+        "id": 0,
+        "direction": "horizontal",
+        "isDragged": true,
+        "isGold": false,
+        "isBlackDot": false
       }
     ]
   },
@@ -83,19 +86,18 @@
     ]
   },
   "metadata": {
-    "createdAt": "2025-10-23T11:59:47.412Z",
-    "updatedAt": "2025-10-23T11:59:47.413Z",
+    "createdAt": "2025-10-23T12:03:40.067Z",
+    "updatedAt": "2025-10-23T12:03:40.067Z",
     "version": "1.0.0"
   },
-  "bonus": "SET",
-  "type": 1,
-  "id": "WSB4K764",
+  "_autoSaved": true,
+  "_autoSaveTime": "2025-10-23T12:03:40.067Z",
   "createdBy": "admin_001",
-  "createdAt": "2025-10-23T11:59:47.431Z",
+  "createdAt": "2025-10-23T12:03:40.073Z",
   "lastModifiedBy": "admin_001",
-  "lastModifiedAt": "2025-10-23T11:59:47.431Z",
+  "lastModifiedAt": "2025-10-23T12:03:40.073Z",
   "serverMetadata": {
-    "savedAt": "2025-10-23T11:59:47.431Z",
+    "savedAt": "2025-10-23T12:03:40.073Z",
     "savedBy": "admin_001",
     "savedByName": "管理员",
     "fileName": "level_1_test_1761220787431.json",

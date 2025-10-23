@@ -105,24 +105,31 @@ class Navigation {
     if (backButton && !backButton.hasEventListener) {
       backButton.hasEventListener = true;
       backButton.addEventListener('click', () => {
-        if (confirm('返回将丢失当前未保存的编辑内容，是否继续？')) {
-          window.currentLevelFilePath = null;
-          
-          // 根据来源页面决定返回的页面
-          if (this.lastEditorSource === 'singleWordset') {
-            this.navigateTo('singleWordsetEditor');
-          } else if (this.lastEditorSource === 'simpleBatchPreview') {
-            // 回到批量关卡预览
-            this.simpleEditorState.stage = 'preview';
-            this.navigateTo('simpleEditor');
-            this.updateSimpleEditorUI();
-          } else if (this.sourcePageId === 'levelList') {
-            // 返回关卡列表页面并刷新
-            this.goToLevelListPage();
-          } else {
-            // 默认返回配置页面
-            this.navigateTo('levelConfig');
-          }
+        // 检查是否有未保存的更改
+        const hasUnsavedChanges = window.autoSaveManager?.hasUnsavedChanges || false;
+        
+        // 只有在有未保存更改时才显示确认对话框
+        if (hasUnsavedChanges && !confirm('返回将丢失当前未保存的编辑内容，是否继续？')) {
+          return; // 用户选择不返回
+        }
+        
+        // 清空当前关卡路径
+        window.currentLevelFilePath = null;
+        
+        // 根据来源页面决定返回的页面
+        if (this.lastEditorSource === 'singleWordset') {
+          this.navigateTo('singleWordsetEditor');
+        } else if (this.lastEditorSource === 'simpleBatchPreview') {
+          // 回到批量关卡预览
+          this.simpleEditorState.stage = 'preview';
+          this.navigateTo('simpleEditor');
+          this.updateSimpleEditorUI();
+        } else if (this.sourcePageId === 'levelList') {
+          // 返回关卡列表页面并刷新
+          this.goToLevelListPage();
+        } else {
+          // 默认返回配置页面
+          this.navigateTo('levelConfig');
         }
       });
     }

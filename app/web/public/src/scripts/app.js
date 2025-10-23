@@ -651,6 +651,11 @@ document.addEventListener('DOMContentLoaded', () => {
               }
             }
             
+            // 通知自动保存管理器：手动保存成功
+            if (window.autoSaveManager) {
+              window.autoSaveManager.onManualSave();
+            }
+            
             // 触发关卡保存事件，用于刷新词频分析
             window.dispatchEvent(new CustomEvent('levelSaved', { detail: { filePath: result.filePath } }));
             

@@ -86,6 +86,12 @@ class AutoSaveManager {
       const result = await window.electronAPI.saveLevel(levelData, window.currentLevelFilePath);
       
       if (result.success) {
+        // 如果是新创建的关卡，保存文件路径以便后续编辑
+        if (!window.currentLevelFilePath && result.filePath) {
+          window.currentLevelFilePath = result.filePath;
+          console.log('💾 自动保存：首次保存，记录文件路径:', window.currentLevelFilePath);
+        }
+        
         this.lastSaveTime = Date.now();
         this.hasUnsavedChanges = false;
         this.showAutoSaveNotification('success');
